@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Chat App</title>
+    
+    <style>
+        h1 {
+            text-align: center;
+        }
+        #messages {
+            height: 300px;
+            overflow: auto;
+        }
+        .chat-message {
+            padding: 5px;
+        }
+        button {
+            width: 100%;
+            margin-top: 2px;
+        }
+        #info {
+            color: red;
+            padding: 5px;
+        }
+        #name {
+            position: relative;
+            box-shadow: 0 4px 2px -2px gray;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="col-md-6">
+            <h1>Chat Application</h1><br>
+
+            <div id="status"></div>
+            <div id="chat">
+                <input type="text" id="name" name="name" class="form-control" placeholder="Enter your name">
+            </div>
+
+            <div class="card">
+                <div id="messages" class="card-block">
+
+                </div>
+
+            </div>
+            <form id="form">
+                <textarea id="textarea" placeholder="Enter chat message here..." class="form-control"></textarea>
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+            <button class="btn btn-default" type="submit" onclick="clrchat()">Clear Chats</button>
+        </div>
+        <p id="info"></p>
+    </div>
+
+</body>
+
+<script src="/socket.io/socket.io.js" ></script>
+    <script>
+        all();
+
+        function all() {
+            var el = function(id) {
+                return document.getElementById(id);
+            }
+
+            var status = el('status')
+            var messages = el('messages')
+            var textarea = el('textarea')
+            var username = el('name')
+            var info = el('info')
+            console.log("name")
+            var statusElement = status.textContent;
+
+            //display chat messages
+            let socket = io('http://localhost:9090');
+            if(socket!=undefined){
+                console.log("Connected...")
+            }
+            else {
+                console.log("Not cnnected")
+            }
+            socket.on('output',function(data){
+                console.log(data)
+                if(data.length) {
+                    for(i=0;i<data.length;i++) {
+                        var message = document.createElement('div');
+                        message.setAttribute('class','chat-message')
+                        message.textContent = data[i].name + ":" + data[i].message;
+                        messages.appendChild(message)
+                    }
+                }
+            })
+
+            //store message
+            form.addEventListener('submit', e =>{
+                if(username.value!='' && textarea.value!='') {
+                    socket.emit('input', {
+                        name : username.value,
+                        message:textarea.value
+                    })
+                    username.value ='';
+                    textarea.value=''
+                    info.textContent =''
+                    //e.preventDefault();
+                }
+                else {
+                    info.textContent ="Please Make sure you entered name and message"
+                    e.preventDefault();
+                }
+            })
+
+        }
+
+        function clrchat() {
+            console.log("chat cleared")
+            messages.textContent='';
+        }
+    </script>
+</html>
